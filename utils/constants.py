@@ -7,9 +7,9 @@ MAIN_EUROPEAN_LEAGUES = [
     "FRA",  # France Ligue 1
     "NED",  # Netherlands Eredivisie
     "BEL",  # Belgium Pro League
-    "SCO",  # Scotland Premiership
     "TUR",  # Turkey Super Lig
-    "GRE"  # Greece Super League
+    "GRE",  # Greece Super League
+    "SCO"   # Scottish Prem
 ]
 
 FOOTBALL_DATA_COUNTRY_MAP = {
@@ -20,8 +20,8 @@ FOOTBALL_DATA_COUNTRY_MAP = {
     "I1": "ITA",  
     "F1": "FRA",  
     "N1": "NED",   
-    "B1": "BEL",
-    "SC1": "SCO",   
+    "B1": "BEL",  
     "T1": "TUR",   
-    "G1": "GRE"   
+    "G1": "GRE",
+    "SC0": "SCO" 
 }
