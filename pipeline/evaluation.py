@@ -1,12 +1,17 @@
 """
-From risk management stage this script needs:
-- The initial bankroll
-- A polars Dataframe with two columns:
-    - date: Every date where at least one match happened from the a given starting date
-    - bankroll: Updated Bankroll after all the betting done that day
+Required Data Structure for Performance Metrics:
+
+- equity_series (pl.DataFrame):
+    - match_id: str/int (Unique identifier)
+    - date: datetime (For time-series growth)
+    - stake: float (The amount risked on this bet)
+    - pnl: float (Profit or Loss from this specific bet)
+    - prev_bankroll: float (The running balance BEFORE this bet settled)
+    - new_bankroll: float (The running balance AFTER this bet settled)
 """
 
 from typing import Iterable, Protocol
+
 import great_tables as gt
 import polars as pl
 
@@ -14,16 +19,12 @@ import polars as pl
 class Metric(Protocol):
     __name__: str  # Explicitly tell the type checker this exists
 
-    def __call__(
-        self, initial_bankroll: float, equity_series: pl.DataFrame
-    ) -> float: ...
+    def __call__(self, equity_series: pl.DataFrame) -> float: ...
 
 
 def get_table(results: dict, title: str) -> gt.GT:
     df = pl.DataFrame([results]).transpose(
-        include_header=True, 
-        header_name="Metric", 
-        column_names=["Value"]
+        include_header=True, header_name="Metric", column_names=["Value"]
     )
 
     return (
@@ -34,12 +35,9 @@ def get_table(results: dict, title: str) -> gt.GT:
         .fmt_number(columns="Value", decimals=2)
     )
 
-def get_metrics(
-    initial_bankroll: float, equity_series: pl.DataFrame, metrics: Iterable[Metric]
-) -> dict:
+
+def get_metrics(equity_series: pl.DataFrame, metrics: Iterable[Metric]) -> dict:
     return {
-        metric.__name__.replace("_", " ").capitalize(): metric(
-            initial_bankroll, equity_series
-        )
+        metric.__name__.replace("_", " ").capitalize(): metric(equity_series)
         for metric in metrics
     }
