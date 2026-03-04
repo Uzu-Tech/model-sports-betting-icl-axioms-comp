@@ -10,6 +10,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+
 def get_clubs(leagues: list[str], clubs_path: Path):
     logger.info(f"Loading clubs from file: {clubs_path}")
     df = pl.read_csv(clubs_path)
@@ -71,7 +72,71 @@ def get_games(
     logger.info("Games loaded successfully")
     return df
 
+
+def get_team_transfer_values(
+    game_df: pl.DataFrame,
+    lineups_path: Path,
+    valuations_path: Path,
+    appearances_path: Path,
+):
+    logger.info(f"Loading lineups from file: {lineups_path}")
+    lineups_df = pl.read_csv(lineups_path)
+    logger.info("Lineups Read Successfully")
+
+    logger.info(f"Loading valuations from file: {valuations_path}")
+    vals_df = pl.read_csv(valuations_path)
+    logger.info("Valuations Read Successfully")
+
+    logger.info(f"Loading appearances from file: {appearances_path}")
+    appearances_df = pl.read_csv(appearances_path)
+    logger.info("Appearances Read Successfully")
+
+    game_ids = game_df.get_column("game_id").unique().to_list()
+
+    lineups_df = lineups_df.filter(
+        pl.col("game_id").is_in(game_ids) & (pl.col("type") == "starting_lineup")
+    ).select("date", "game_id", "player_id")
+
+    lineups_df = lineups_df.sort("date")
+    vals_df = vals_df.sort("date")
+
+    market_value_df = lineups_df.join_asof(
+        vals_df, on="date", by="player_id", strategy="backward"
+    ).select("game_id", "date", "player_id", "market_value_in_eur")
+
+    market_value_df = market_value_df.join(
+        appearances_df.select("game_id", "player_id", "player_club_id"),
+        on=["game_id", "player_id"],
+        how="left",
+    )
+
+    market_value_df = market_value_df.group_by(["game_id", "player_club_id"]).agg(
+        pl.col("market_value_in_eur").mean().alias("mean_market_val")
+    )
+
+    return market_value_df
+
+
+def get_game_market_values(
+    game_df: pl.DataFrame,
+    team_values: pl.DataFrame
+):
+    game_market_vals_df = game_df.join(
+        team_values.select("game_id", "player_club_id", "mean_market_val"),
+        left_on=["game_id", "home_club_id"],
+        right_on=["game_id", "player_club_id"],
+        how="left"
+    ).rename({"mean_market_val": "home_mean_market_val"})
+
+    game_market_vals_df = game_market_vals_df.join(
+        team_values.select("game_id", "player_club_id", "mean_market_val"),
+        left_on=["game_id", "away_club_id"],
+        right_on=["game_id", "player_club_id"],
+        how="left"
+    ).rename({"mean_market_val": "away_mean_market_val"})
+
+    return game_market_vals_df
+
+
 def get_transfer_data_leagues(leagues: list[str]):
-    return [
-        TRANSFER_DATA_COUNTRY_MAP.inverse[league] for league in leagues
-    ]
+    return [TRANSFER_DATA_COUNTRY_MAP.inverse[league] for league in leagues]

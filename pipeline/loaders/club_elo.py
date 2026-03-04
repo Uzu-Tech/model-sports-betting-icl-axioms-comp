@@ -1,5 +1,6 @@
 import logging
 from pathlib import Path
+
 import polars as pl
 
 logging.basicConfig(
@@ -10,7 +11,9 @@ logger = logging.getLogger(__name__)
 CLUB_ELO_URL = "http://api.clubelo.com"
 
 
-def load_club_elo(teams: list[str], num_years: int, mapping: dict, save_path: Path):
+def load_club_elo(
+    teams: list[str], num_years: int, mapping: dict[str, str], save_path: Path
+):
     if save_path.exists():
         df = pl.read_parquet(save_path)
         return df
@@ -43,7 +46,7 @@ def load_club_elo(teams: list[str], num_years: int, mapping: dict, save_path: Pa
     return df
 
 
-def get_club_elo_names(num_yrs: int, leagues: list[str]):
+def get_club_elo_names(num_yrs: int, leagues: list[str]) -> list[str]:
     teams = set()
 
     for league in leagues:
@@ -73,7 +76,8 @@ def get_club_elo_names(num_yrs: int, leagues: list[str]):
                 continue
 
     logger.info(f"Extraction complete. Total unique teams found: {len(teams)}")
-    return teams
+    return list(teams)
+
 
 def fix_incorrect_mappings(mapping: dict):
     mapping["Ath Madrid"] = "Atletico"
