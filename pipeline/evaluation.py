@@ -10,34 +10,120 @@ Required Data Structure for Performance Metrics:
     - new_bankroll: float (The running balance AFTER this bet settled)
 """
 
-from typing import Iterable, Protocol
+from typing import Iterable, Mapping
 
 import great_tables as gt
 import polars as pl
 
-
-class Metric(Protocol):
-    __name__: str  # Explicitly tell the type checker this exists
-
-    def __call__(self, equity_series: pl.DataFrame) -> float: ...
+from pipeline.metrics.utils import Metric
 
 
-def get_table(results: dict, title: str) -> gt.GT:
-    df = pl.DataFrame([results]).transpose(
-        include_header=True, header_name="Metric", column_names=["Value"]
-    )
+def evaluate_returns(
+    equity_series: pl.DataFrame, metrics: Mapping[str, Iterable[Metric]]
+):
+    rows = [
+        {
+            "Type": metric_type,
+            "Metric": metric.__name__.replace("_", " ").title()
+            + (f" ({metric.suffix})" if metric.suffix != "" else metric.suffix),
+            "Value": metric(equity_series),
+            "fmt": metric.format,
+            "dec": metric.decimals,
+            "sign": metric.signed,
+        }
+        for metric_type, metric_list in metrics.items()
+        for metric in metric_list
+    ]
 
-    return (
-        gt.GT(df)
+    df = pl.DataFrame(rows)
+    return df
+
+
+def get_evaluation_table(df: pl.DataFrame, title: str, subtitle: str):
+    table = (
+        gt.GT(df, groupname_col="Type", rowname_col="Metric")
+        .cols_hide(columns=["fmt", "dec", "sign"])
         .tab_header(
             title=title,
+            subtitle=subtitle,
         )
-        .fmt_number(columns="Value", decimals=2)
     )
+    # Loop through unique combinations of format, decimals, and sign
+    formats_to_apply = df.select(["fmt", "dec", "sign"]).unique()
+
+    for row in formats_to_apply.to_dicts():
+        selector = (
+            (pl.col("fmt") == row["fmt"])
+            & (pl.col("dec") == row["dec"])
+            & (pl.col("sign") == row["sign"])
+        )
+
+        if row["fmt"] == "percent":
+            table = table.fmt_percent(
+                columns="Value",
+                rows=selector,
+                decimals=row["dec"],
+                force_sign=row["sign"],
+            )
+        elif row["fmt"] == "currency":
+            table = table.fmt_currency(
+                columns="Value",
+                rows=selector,
+                decimals=row["dec"],
+                force_sign=row["sign"],
+                currency="USD",
+            )
+        else:
+            table = table.fmt_number(
+                columns="Value",
+                rows=selector,
+                decimals=row["dec"],
+                force_sign=row["sign"],
+            )
+
+    return table
 
 
-def get_metrics(equity_series: pl.DataFrame, metrics: Iterable[Metric]) -> dict:
-    return {
-        metric.__name__.replace("_", " ").capitalize(): metric(equity_series)
-        for metric in metrics
-    }
+def apply_clean_theme(gt_table: gt.GT):
+    return (
+        gt_table
+        .tab_style(
+            style=gt.style.fill(color="#2c3e50"),  # Deep Slate Blue
+            locations=gt.loc.column_labels(),
+        )
+        .tab_style(
+            style=gt.style.text(
+                color="white", weight="bold", transform="uppercase", size="12px"
+            ),
+            locations=gt.loc.column_labels(),
+        )
+        .tab_style(
+            style=[
+                gt.style.fill(color="#f2f4f4"),  # Very light grey
+                gt.style.text(weight="bold", color="#34495e"),
+            ],
+            locations=gt.loc.row_groups(),
+        )
+        .tab_style(
+            style=gt.style.text(weight="normal", color="#2c3e50"),
+            locations=gt.loc.stub(),
+        )
+        .tab_options(
+            column_labels_border_bottom_color="#1a252f",
+            table_font_names=[
+                "Inter",
+                "Segoe UI",
+                "Roboto",
+                "Helvetica Neue",
+                "Arial",
+                "sans-serif",
+            ],
+        )
+        .tab_style(
+            style=gt.style.text(
+                font="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+                size="15px",
+            ),
+            locations=gt.loc.body(columns="Value"),
+        )
+    )
