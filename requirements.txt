@@ -1,10 +1,17 @@
 attrs==25.4.0
+babel==2.18.0
 bidict==0.23.1
 certifi==2026.2.25
 charset-normalizer==3.4.4
+commonmark==0.9.1
+faicons==0.2.2
 fastjsonschema==2.21.2
 fuzzywuzzy==0.18.0
+great-tables==0.21.0
+htmltools==0.6.0
 idna==3.11
+importlib_metadata==8.7.1
+importlib_resources==6.5.2
 jsonschema==4.26.0
 jsonschema-specifications==2025.9.1
 jupyter_core==5.9.1
@@ -31,5 +38,7 @@ requests==2.32.5
 rpds-py==0.30.0
 six==1.17.0
 traitlets==5.14.3
+typing_extensions==4.15.0
 tzdata==2025.3
 urllib3==2.6.3
+zipp==3.23.0
