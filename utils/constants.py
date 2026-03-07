@@ -5,6 +5,7 @@ FOOTBALL_DATA_COLUMNS = [
     "Div",
     "HomeTeam",
     "AwayTeam",
+    "FTR",
     "FTHG",
     "FTAG",
     "HS",

@@ -8,6 +8,13 @@ Required Data Structure for Performance Metrics:
     - pnl: float (Profit or Loss from this specific bet)
     - prev_bankroll: float (The running balance BEFORE this bet settled)
     - new_bankroll: float (The running balance AFTER this bet settled)
+
+- bet_series (pl.DataFrame):
+    - match_id: str/int (Unique identifier)
+    - date: datetime (For time-series growth)
+    - model_probability: float
+    - odds: float (Profit or Loss from this specific bet)
+    - outcome: str (win or loss)
 """
 
 from typing import Iterable, Mapping
