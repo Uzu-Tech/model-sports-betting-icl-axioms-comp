@@ -31,33 +31,37 @@ MAIN_EUROPEAN_LEAGUES = [
     "BEL",  # Belgium Pro League
     "TUR",  # Turkey Super Lig
     "GRE",  # Greece Super League
-    "SCO"   # Scottish Prem
+    "SCO",  # Scottish Prem
 ]
 
-FOOTBALL_DATA_COUNTRY_MAP = bidict({
-    "E0": "ENG",  
-    "P1": "POR",   
-    "SP1": "ESP",  
-    "D1": "GER",  
-    "I1": "ITA",  
-    "F1": "FRA",  
-    "N1": "NED",   
-    "B1": "BEL",  
-    "T1": "TUR",   
-    "G1": "GRE",
-    "SC0": "SCO" 
-})
+FOOTBALL_DATA_COUNTRY_MAP = bidict(
+    {
+        "E0": "ENG",
+        "P1": "POR",
+        "SP1": "ESP",
+        "D1": "GER",
+        "I1": "ITA",
+        "F1": "FRA",
+        "N1": "NED",
+        "B1": "BEL",
+        "T1": "TUR",
+        "G1": "GRE",
+        "SC0": "SCO",
+    }
+)
 
-TRANSFER_DATA_COUNTRY_MAP = bidict({
-    "GB1": "ENG",
-    "PO1": "POR",
-    "ES1": "ESP",
-    "L1":  "GER",
-    "IT1": "ITA",
-    "FR1": "FRA",
-    "NL1": "NED",
-    "BE1": "BEL",
-    "TR1": "TUR",
-    "GR1": "GRE",
-    "SC1": "SCO"
-})
+TRANSFER_DATA_COUNTRY_MAP = bidict(
+    {
+        "GB1": "ENG",
+        "PO1": "POR",
+        "ES1": "ESP",
+        "L1": "GER",
+        "IT1": "ITA",
+        "FR1": "FRA",
+        "NL1": "NED",
+        "BE1": "BEL",
+        "TR1": "TUR",
+        "GR1": "GRE",
+        "SC1": "SCO",
+    }
+)
