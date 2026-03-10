@@ -130,7 +130,5 @@ df.drop("Date", "League", "HomeTeam", "AwayTeam", "FTR").describe()
 # %% [markdown]
 # Talk about descibed stats blah blah....
 
-# %%
-
 # %% [markdown]
 # ## Feature Engineering
