@@ -24,14 +24,15 @@ import polars as pl
 from datetime import datetime
 
 def kelly_criterion(bet_series, initial_bank_roll, fraction):
-    
+    fixed_bet = fraction
+
     bet_series = (
         bet_series
         .with_columns(
             (pl.col('odds') - 1).alias('net_odds')
         )
         .with_columns(
-            (((pl.col('net_odds')*pl.col('model_probability') - (1 - pl.col('model_probability'))) * fraction)
+            (((pl.col('net_odds')*pl.col('model_probability') - (1 - pl.col('model_probability')))*fraction)
             /pl.col('net_odds'))
             .alias('kelly_fraction')
         )
@@ -42,7 +43,7 @@ def kelly_criterion(bet_series, initial_bank_roll, fraction):
              .alias('return')
         )
         .with_columns(
-            ((1 + pl.col('return')).cum_prod()  * initial_bank_roll)
+            ((1 + pl.col('return')).cum_prod()*initial_bank_roll)
             .alias('new_bank_roll')
         )
         .with_columns(
@@ -52,8 +53,78 @@ def kelly_criterion(bet_series, initial_bank_roll, fraction):
         .with_columns(
             (pl.col('prev_bank_roll')*pl.col('kelly_fraction'))
             .alias('stake'),
-            (pl.col('new_bank_roll') - pl.col('prev_bank_roll'))
+            (pl.col('return')*pl.col('prev_bank_roll'))
             .alias('pnl')
+        )
+        .drop(
+            'model_probability','odds', 'outcome', 'kelly_fraction', 'net_odds', 'return'
+        )
+    )
+
+    return bet_series
+
+
+def fixed_fraction(bet_series, initial_bank_roll, fraction):
+    bet_series = (
+        bet_series
+        .with_columns(
+            (pl.col('odds') - 1).alias('net_odds')
+        )
+        .with_columns(
+            (pl.when(pl.col('outcome') == 'win')
+             .then(fraction*pl.col('net_odds'))
+             .otherwise(-fraction))
+             .alias('return')
+        )
+        .with_columns(
+            ((1 + pl.col('return')).cum_prod()*initial_bank_roll)
+            .alias('new_bank_roll')
+        )
+        .with_columns(
+            (pl.col('new_bank_roll').shift().fill_null(initial_bank_roll))
+            .alias('prev_bank_roll')
+        )
+        .with_columns(
+            (pl.col('prev_bank_roll')*fraction)
+            .alias('stake'),
+            (pl.col('return')*pl.col('prev_bank_roll'))
+            .alias('pnl')
+        )
+        .drop(
+            'model_probability','odds', 'outcome', 'net_odds', 'return'
+        )
+    )
+
+    return bet_series
+
+
+def flat_bet(bet_series, initial_bank_roll, flat_bet):
+    bet_series = (
+        bet_series
+        .with_columns(
+            pl.lit(flat_bet)
+            .alias('stake')
+        )
+        .with_columns(
+            (pl.col('odds') - 1)
+            .alias('net_odds')
+        )
+        .with_columns(
+            (pl.when(pl.col('outcome') == 'win')
+             .then(flat_bet*pl.col('net_odds'))
+             .otherwise(-flat_bet))
+             .alias('pnl')
+        )
+        .with_columns(
+            (initial_bank_roll + (pl.col('pnl')).cum_sum())
+            .alias('new_bank_roll')
+        )
+        .with_columns(
+            (pl.col('new_bank_roll').shift().fill_null(initial_bank_roll))
+            .alias('prev_bank_roll')
+        )
+        .drop(
+            'model_probability','odds', 'outcome', 'net_odds'
         )
     )
 
