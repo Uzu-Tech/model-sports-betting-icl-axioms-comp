@@ -3,7 +3,6 @@ import polars as pl
 import numpy as np
 from sklearn.metrics import log_loss
 from pipeline.models.possion import ExponentialPoissonModel
-from datetime import datetime, timedelta
 
 """
 market probabilities:
