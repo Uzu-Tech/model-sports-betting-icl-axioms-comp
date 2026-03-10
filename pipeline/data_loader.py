@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import polars as pl
+from datetime import timedelta
 
 import pipeline.loaders.club_elo as elo
 import pipeline.loaders.transfer_data as transfer
@@ -96,6 +97,11 @@ def get_mappings(fd_teams: list[str], num_years: int, leagues: list[str]):
 def add_elo_to_df(df: pl.DataFrame, club_elo_df: pl.DataFrame):
     df = df.sort("Date")
     club_elo_df = club_elo_df.sort("From")
+
+    # Shift date by one day to prevent lookahead bias
+    club_elo_df = club_elo_df.with_columns(
+        (pl.col("From") + timedelta(days=1))
+    )
 
     combined_df = df.join_asof(
         club_elo_df.select("Club", "From", "Elo"),
