@@ -27,8 +27,8 @@ def load_club_elo(
         try:
             df = pl.read_csv(url, null_values=["None"], try_parse_dates=True)
             df = df.filter(
-                (pl.col("From").dt.year() >= 2025 - num_years)
-                & (pl.col("From").dt.year() <= 2025)
+                (pl.col("From").dt.year() >= 2026 - num_years)
+                & (pl.col("From").dt.year() <= 2026)
             ).drop("Rank", "Level")
 
             if df.is_empty():
@@ -52,7 +52,7 @@ def get_club_elo_names(num_yrs: int, leagues: list[str]) -> list[str]:
     for league in leagues:
         logger.info(f"Pulling data for league: {league}")
 
-        for year in range(2024, 2024 - num_yrs, -1):
+        for year in range(2025, 2025 - num_yrs, -1):
             # Getting all teams in the league for that year by getting data for one date in that year
             date_str = f"{year}-12-31"
             url = f"{CLUB_ELO_URL}/{date_str}"

@@ -2,6 +2,7 @@ from bidict import bidict
 
 FOOTBALL_DATA_COLUMNS = [
     "Date",
+    "Time",
     "Div",
     "HomeTeam",
     "AwayTeam",

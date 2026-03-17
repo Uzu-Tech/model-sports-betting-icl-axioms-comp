@@ -37,13 +37,22 @@ class SequentialSeasonValidator:
 
     def _filter_seasons(self, df: pl.DataFrame):
         """Extracts the relevant seasons based on start_season and num_seasons."""
-        all_seasons = df["season"].unique(maintain_order=True).to_list()
+        all_seasons = df["Season"].unique(maintain_order=True).to_list()
         try:
             start_idx = all_seasons.index(self.start_season)
         except ValueError:
             raise ValueError(f"Start season {self.start_season} not found in data.")
             
         return all_seasons[start_idx : start_idx + self.num_seasons]
+
+    def fit_all_training_data(self, df: pl.DataFrame):
+        target_seasons = self._filter_seasons(df)
+        train_df = df.filter(pl.col("Season").is_in(target_seasons))
+        self.model.fit(
+            train_df.select(self.features), 
+            train_df.select(self.target_col), 
+            train_df.select(self.market_cols)
+        )
 
     def _execute_iteration(self, train_df: pl.DataFrame, val_df: pl.DataFrame, season_name: str):
         """Fits on training data and evaluates on the validation season."""
@@ -55,7 +64,7 @@ class SequentialSeasonValidator:
         )
         
         # 2. Predict
-        preds = self.model.predict(
+        pred_probs = self.model.predict(
             val_df.select(self.features), 
             val_df.select(self.market_cols)
         )
@@ -64,7 +73,7 @@ class SequentialSeasonValidator:
         val_y = val_df.select(self.target_col)
         bookie_probs = val_df.select(self.market_cols).to_numpy()
         
-        m_loss = log_loss(val_y, preds, labels=[0, 1, 2])
+        m_loss = log_loss(val_y, pred_probs, labels=[0, 1, 2])
         b_loss = log_loss(val_y, bookie_probs, labels=[0, 1, 2])
 
         return {
@@ -76,7 +85,7 @@ class SequentialSeasonValidator:
         }
 
     def run(self, df: pl.DataFrame):
-        df = df.sort("date")
+        df = df.sort("Datetime")
         target_seasons = self._filter_seasons(df)
         results = []
 
@@ -86,8 +95,8 @@ class SequentialSeasonValidator:
             completed_seasons = target_seasons[:i]
 
             # Train on all history up to the start of the validation season
-            train_df = df.filter(pl.col("season").is_in(completed_seasons))
-            val_df = df.filter(pl.col("season") == current_val_season)
+            train_df = df.filter(pl.col("Season").is_in(completed_seasons))
+            val_df = df.filter(pl.col("Season") == current_val_season)
 
             res = self._execute_iteration(train_df, val_df, current_val_season)
             results.append(res)

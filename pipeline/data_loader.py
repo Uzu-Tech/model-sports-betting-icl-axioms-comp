@@ -1,7 +1,7 @@
+from datetime import timedelta
 from pathlib import Path
 
 import polars as pl
-from datetime import timedelta
 
 import pipeline.loaders.club_elo as elo
 import pipeline.loaders.transfer_data as transfer
@@ -58,9 +58,18 @@ def load_data(leagues: list[str], num_years: int):
         pl.col("away_team").replace(inverse_mapping),
     )
 
-    return add_elo_to_df(
+    df = add_elo_to_df(
         add_market_data_to_df(fd_df, market_val_df), club_elo_df
     ).drop_nulls()
+
+    # Just add them together
+    df = (
+        df.with_columns(Date=pl.col("Date").dt.combine(pl.col("Time")))
+        .rename({"Date": "Datetime"})
+        .drop("Time")
+    )
+
+    return df.sort("Datetime", "HomeTeam")
 
 
 def get_mappings(fd_teams: list[str], num_years: int, leagues: list[str]):
@@ -97,31 +106,35 @@ def get_mappings(fd_teams: list[str], num_years: int, leagues: list[str]):
 def add_elo_to_df(df: pl.DataFrame, club_elo_df: pl.DataFrame):
     df = df.sort("Date")
     club_elo_df = club_elo_df.sort("From")
+    combined_df = df
 
-    # Shift date by one day to prevent lookahead bias
-    club_elo_df = club_elo_df.with_columns(
-        (pl.col("From") + timedelta(days=1))
+    for side in ("Home", "Away"):
+        combined_df = combined_df.join_asof(
+            club_elo_df.select("Club", "From", "Elo"),
+            left_on="Date",
+            right_on="From",
+            by_left=f"{side}Team",
+            by_right="Club",
+            strategy="backward",
+        ).rename({"Elo": f"{side.lower()}_team_elo"})
+
+
+    combined_df = combined_df.drop("From", "From_right")
+    combined_df = combined_df.with_columns(
+        (pl.col("Date") + timedelta(days=1)).alias("NextDay")
     )
 
-    combined_df = df.join_asof(
-        club_elo_df.select("Club", "From", "Elo"),
-        left_on="Date",
-        right_on="From",
-        by_left="HomeTeam",
-        by_right="Club",
-        strategy="backward",
-    ).rename({"Elo": "home_team_elo"})
+    for side in ("Home", "Away"):    
+        combined_df = combined_df.join_asof(
+            club_elo_df.select(["Club", "From", "Elo"]),
+            left_on="NextDay",
+            right_on="From",
+            by_left=f"{side}Team",
+            by_right="Club",
+            strategy="forward",
+        ).rename({"Elo": f"{side.lower()}_team_elo_after"})
 
-    combined_df = combined_df.join_asof(
-        club_elo_df.select("Club", "From", "Elo"),
-        left_on="Date",
-        right_on="From",
-        by_left="AwayTeam",
-        by_right="Club",
-        strategy="backward",
-    ).rename({"Elo": "away_team_elo"})
-
-    return combined_df.drop("From", "From_right")
+    return combined_df.drop("From", "From_right", "NextDay")
 
 
 def get_transfer_market_df(leagues: list[str], num_years: int):

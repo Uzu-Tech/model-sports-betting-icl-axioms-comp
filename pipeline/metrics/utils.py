@@ -46,18 +46,18 @@ def get_log_returns(equity_series: pl.DataFrame) -> np.ndarray:
 
 
 def season_adjust(value: float, equity_series: pl.DataFrame) -> float:
-    mean_bets_per_day = get_mean_beats_per_day(equity_series)
-    return value * np.sqrt(mean_bets_per_day * SEASON_MATCH_DAYS) # type: ignore
+    mean_bets_per_season = get_mean_beats_per_season(equity_series)
+    return value * np.sqrt(mean_bets_per_season) # type: ignore
 
 def calmer_season_adjust(value: float, equity_series: pl.DataFrame) -> float:
-    mean_bets_per_day = get_mean_beats_per_day(equity_series)
-    return value * mean_bets_per_day * SEASON_MATCH_DAYS # type: ignore
+    mean_bets_per_season = get_mean_beats_per_season(equity_series)
+    return value * mean_bets_per_season # type: ignore
 
-def get_mean_beats_per_day(equity_series: pl.DataFrame):
+def get_mean_beats_per_season(equity_series: pl.DataFrame):
     return (
         equity_series
-        .group_by(pl.col("date").dt.date())
-        .agg(pl.len().alias("bets_per_day"))
-        .get_column("bets_per_day")
+        .group_by(pl.col("Season"))
+        .agg(pl.len().alias("bets_per_season"))
+        .get_column("bets_per_season")
         .mean()
     )
