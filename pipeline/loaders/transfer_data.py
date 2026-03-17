@@ -37,6 +37,11 @@ def fix_incorrect_mappings(mapping: dict):
         "Nice": "ogc-nizza",
         "Aris": "aris-thessaloniki",
         "Verona": "hellas-verona",
+        "Man United": "manchester-united",
+        "Angers": "sco-angers",
+        "Aves": "desportivo-aves",
+        "Fiorentina": "ac-florenz",
+        "Buyuksehyr": "istanbul-basaksehir"
     }
     mapping.update(manual_fixes)
     return mapping

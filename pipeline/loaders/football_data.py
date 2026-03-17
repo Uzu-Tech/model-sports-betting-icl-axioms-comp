@@ -24,7 +24,7 @@ def load_football_data(
         return df
 
     num_years = num_years
-    final_season = 25
+    final_season = 26
     seasons = [
         f"{season - 1}{season}"
         for season in range(final_season, final_season - num_years, -1)
@@ -33,7 +33,7 @@ def load_football_data(
     BASE_URL = "https://www.football-data.co.uk/mmz4281/"
 
     if logger:
-        logger.info(f"Fetching {num_years} of data from football data")
+        logger.info(f"Fetching {num_years} years of data from football data")
 
     all_dfs = [
         pl.read_csv(
