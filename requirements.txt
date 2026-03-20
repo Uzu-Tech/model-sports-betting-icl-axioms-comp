@@ -39,6 +39,7 @@ jupyter_client==8.8.0
 jupyter_core==5.9.1
 jupytext==1.19.1
 Levenshtein==0.27.3
+lightgbm==4.6.0
 linkify-it-py==2.1.0
 Markdown==3.10.2
 markdown-it-py==4.0.0
