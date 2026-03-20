@@ -6,6 +6,10 @@ from plotly.subplots import make_subplots
 import numpy as np
 from pipeline.risk import kelly_criterion, flat_bet, fixed_fraction
 
+import logging
+logging.getLogger('kaleido').setLevel(logging.ERROR)
+logging.getLogger('plotly').setLevel(logging.ERROR)
+
 def plot_equity_comparison(
     type: str,
     model_bet_series, 
