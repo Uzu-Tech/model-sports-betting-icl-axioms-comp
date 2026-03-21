@@ -74,8 +74,20 @@ def plot_equity_comparison(
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
         margin=dict(l=50, r=50, t=100, b=50)
     )
+
+    fig.update_layout(
+        width=1200,
+        height=700,
+        margin=dict(t=120), # Gives the title room
+        legend=dict(
+            orientation="h",
+            y=-0.2,         # Moves the legend BELOW the chart instead of on top
+            x=0.5,
+            xanchor="center"
+        )
+    )
     
-    fig.show()
+    fig.show(renderer='png', scale=1.5)
 
 
 def plot_model_comparison(market_results, model_results):
@@ -136,8 +148,20 @@ def plot_model_comparison(market_results, model_results):
 
     fig.update_yaxes(title_text="Log Loss (Lower is Better)", secondary_y=False)
     fig.update_yaxes(title_text="Accuracy (Higher is Better)", secondary_y=True)
+
+    fig.update_layout(
+        width=1200,
+        height=700,
+        margin=dict(t=120), # Gives the title room
+        legend=dict(
+            orientation="h",
+            y=-0.2,         # Moves the legend BELOW the chart instead of on top
+            x=0.5,
+            xanchor="center"
+        )
+    )
     
-    fig.show()
+    fig.show(renderer='png', scale=1.5)
 
 def plot_anova_importance(anova_df: pl.DataFrame, top_n: int = 20):
     plot_data = anova_df.sort("F-Statistic", descending=True).head(top_n)
@@ -163,7 +187,7 @@ def plot_anova_importance(anova_df: pl.DataFrame, top_n: int = 20):
     )
     
     # Add a vertical line for a common significance threshold if p-values are visible
-    fig.show()
+    fig.show(renderer='png', scale=1.5)
 
 def plot_bookmaker_baseline(metrics_df: pl.DataFrame):
     fig = make_subplots(specs=[[{"secondary_y": True}]])
@@ -206,7 +230,7 @@ def plot_bookmaker_baseline(metrics_df: pl.DataFrame):
     fig.update_yaxes(title_text="<b>Log Loss</b> (Lower is better)", secondary_y=False, color="firebrick")
     fig.update_yaxes(title_text="<b>Accuracy</b> (Higher is better)", secondary_y=True, color="royalblue")
 
-    fig.show()
+    fig.show(renderer='png', scale=1.5)
 
 def plot_corr_matrix(features: pl.DataFrame, size):
     numeric_df = features.select(cs.numeric())
@@ -230,7 +254,7 @@ def plot_corr_matrix(features: pl.DataFrame, size):
         height=size[1],
         xaxis_tickangle=-45
     )
-    fig.show()
+    fig.show(renderer='png', scale=1.5)
 
 def plot_vif(vif_df, threshold_warn=5, threshold_crit=10):
 
@@ -253,7 +277,7 @@ def plot_vif(vif_df, threshold_warn=5, threshold_crit=10):
         margin=dict(l=20, r=20, t=50, b=50)
     )
 
-    fig.show()
+    fig.show(renderer='png', scale=1.5)
 
 
 def plot_feature_weights_plotly(importance_df, model, feature_list):
@@ -311,7 +335,7 @@ def plot_feature_weights_plotly(importance_df, model, feature_list):
         )]
     )
 
-    fig.show()
+    fig.show(renderer='png', scale=1.5)
 
 
 
@@ -369,4 +393,4 @@ def plot_anova(summary_df):
         hovermode="y unified"
     )
 
-    fig.show()
+    fig.show(renderer='png', scale=1.5)
